@@ -1,0 +1,17 @@
+frontend/node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
+backend/.venv/
+backend/__pycache__/
+backend/.pytest_cache/
+backend/.pytest-tmp/
+backend/**/*.pyc
+.bestshot-data/
+.bestshot-runtime/
+.tmp/
+.env
+.DS_Store
+Thumbs.db
+
