@@ -40,12 +40,12 @@ export default function App() {
     <div className="app">
       {!project && !organizerActive && (
         <nav className="landing-nav">
-          <div className="brand"><span className="brand-mark"><Sparkles size={17} /></span><span><strong>BestShot</strong><small>TRAVEL PHOTO LAB</small></span></div>
+          <div className="brand"><span className="brand-mark"><Sparkles size={17} /></span><span><strong>BestShot</strong><small>SMART PHOTO CURATOR</small></span></div>
           <div className="mode-switch">
             <button type="button" className={mode === 'organize' ? 'active' : ''} onClick={() => setMode('organize')}><Images size={14} />智能整理</button>
             <button type="button" className={mode === 'merge' ? 'active' : ''} onClick={() => setMode('merge')}><Layers3 size={14} />照片合成</button>
           </div>
-          <span className="local-badge"><i /> LOCAL ONLY</span>
+          <span className="local-badge"><i />本地处理</span>
         </nav>
       )}
       {project ? <ImageEditor project={project} onProject={setProject} onReset={reset} onError={setError} /> : mode === 'organize' ? <PhotoOrganizer onError={(message) => setError(message)} onActiveChange={setOrganizerActive} /> : <ImageUploader loading={loading} onSubmit={start} />}

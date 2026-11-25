@@ -81,20 +81,20 @@ export function PhotoOrganizer({ onError, onActiveChange }: Props) {
   return (
     <main className="organizer-upload">
       <section className="organizer-intro">
-        <div className="eyebrow"><span /> AI PHOTO ORGANIZER</div>
-        <h1>只管记录精彩，<br />剩下的交给 <em>AI</em></h1>
-        <p>自动分组、智能排序，再把旅途中真正值得分享的照片挑出来。</p>
+        <div className="eyebrow"><span /> SMART PHOTO ORGANIZER</div>
+        <h1><span>只管记录精彩，</span><span>剩下的交给 <em>BestShot</em></span></h1>
+        <p>一次导入整趟旅程，自动归组、挑出好照片，再整理成值得分享的故事。</p>
         <div className="organizer-feature-list">
-          <div><Check size={15} /><strong>相似场景自动归组</strong></div>
-          <div><Medal size={15} /><strong>好照片优先展示</strong></div>
-          <div><LockKeyhole size={15} /><strong>原图保留在本地</strong></div>
+          <div><Check size={15} /><strong>自动归组</strong></div>
+          <div><Medal size={15} /><strong>质量排序</strong></div>
+          <div><LockKeyhole size={15} /><strong>本地处理</strong></div>
         </div>
       </section>
 
       <section className="batch-card">
         <div className="batch-card-heading">
-          <div><small>ADD PHOTOS</small><h2>选择旅行照片</h2></div>
-          <span>已选 {files.length} / 200</span>
+          <div><h2>导入照片</h2><p>一次选择整个旅程</p></div>
+          <span>{files.length} / 200</span>
         </div>
         <div
           className={`batch-dropzone ${files.length ? 'has-files' : ''}`}
@@ -115,7 +115,7 @@ export function PhotoOrganizer({ onError, onActiveChange }: Props) {
               <i><Plus size={17} />继续添加</i>
             </div>
           ) : (
-            <div className="dropzone-empty"><UploadCloud size={32} /><strong>拖放照片到这里</strong><span>或点击浏览 · 支持 JPG、PNG、WebP、HEIC / HEIF · 最多 200 张</span></div>
+            <div className="dropzone-empty"><UploadCloud size={30} /><strong>拖放或选择照片</strong><span>JPG · PNG · WebP · HEIC / HEIF</span></div>
           )}
         </div>
 
@@ -146,9 +146,9 @@ export function PhotoOrganizer({ onError, onActiveChange }: Props) {
           </div>
         </div>
         <button className="primary-action" type="button" disabled={files.length < 2 || loading} onClick={analyze}>
-          {loading ? <><LoaderCircle className="spin" size={17} />正在分析 {files.length} 张照片…</> : <><Sparkles size={16} />开始智能整理<ChevronRight size={16} /></>}
+          {loading ? <><LoaderCircle className="spin" size={17} />正在分析 {files.length} 张照片…</> : <><Sparkles size={16} />开始整理<ChevronRight size={16} /></>}
         </button>
-        <p className="upload-tip">首版使用 CPU 本地分析，照片较多时请耐心等待</p>
+        <p className="upload-tip">本地分析 · 原图不会离开你的设备</p>
       </section>
     </main>
   )
