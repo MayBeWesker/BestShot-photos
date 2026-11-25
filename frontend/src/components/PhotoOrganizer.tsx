@@ -82,12 +82,12 @@ export function PhotoOrganizer({ onError, onActiveChange }: Props) {
     <main className="organizer-upload">
       <section className="organizer-intro">
         <div className="eyebrow"><span /> SMART ORGANIZER</div>
-        <h1>把一趟旅行，<br />整理成<em>值得分享</em>的照片。</h1>
-        <p>批量导入照片，自动把同一场景和相近构图归组，并按画面质量与简洁度完成排序。</p>
+        <h1>把旅行照片，<br /><em>整理得更好。</em></h1>
+        <p>自动完成相似场景分组和质量排序，让你更快选出真正值得分享的照片。</p>
         <div className="organizer-feature-list">
-          <div><Check size={15} /><span><strong>相似场景分组</strong><small>结合画面结构、颜色与拍摄时间</small></span></div>
-          <div><Check size={15} /><span><strong>组内质量排序</strong><small>最佳照片自动排在第一张</small></span></div>
-          <div><LockKeyhole size={15} /><span><strong>整理在本地完成</strong><small>仅主动生成九图时分析高分代表缩略图</small></span></div>
+          <div><Check size={16} /><span><strong>自动分组</strong><small>识别相似场景</small></span></div>
+          <div><Check size={16} /><span><strong>质量排序</strong><small>好照片优先展示</small></span></div>
+          <div><LockKeyhole size={16} /><span><strong>本地整理</strong><small>原图保留在设备</small></span></div>
         </div>
       </section>
 
