@@ -17,5 +17,5 @@ foreach ($PidFile in $PidFiles) {
     }
 }
 
-Write-Host 'BestShot Merge has stopped.' -ForegroundColor Green
+Write-Host 'BestShot-photos has stopped.' -ForegroundColor Green
 Start-Sleep -Seconds 1

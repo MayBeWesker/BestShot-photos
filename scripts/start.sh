@@ -23,6 +23,6 @@ cleanup() { kill "$backend_pid" "$frontend_pid" 2>/dev/null || true; }
 trap cleanup EXIT INT TERM
 (cd "$backend_root" && .venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000) & backend_pid=$!
 (cd "$frontend_root" && npm run dev) & frontend_pid=$!
-echo "BestShot Merge: http://127.0.0.1:5173"
+echo "BestShot-photos: http://127.0.0.1:5173"
 wait
 

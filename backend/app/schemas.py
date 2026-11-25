@@ -51,7 +51,7 @@ class ComposeResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     status: Literal["ok"] = "ok"
-    service: str = "bestshot-merge"
+    service: str = "bestshot-photos"
 
 
 class QualityScore(BaseModel):

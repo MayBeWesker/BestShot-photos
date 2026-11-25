@@ -1,4 +1,4 @@
-"""BestShot Merge backend package."""
+"""BestShot-photos backend package."""
 
 from pillow_heif import register_heif_opener
 

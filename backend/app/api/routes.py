@@ -90,7 +90,7 @@ def serialize_project(metadata: dict) -> dict:
 
 @router.get("/health", response_model=HealthResponse)
 def health() -> dict:
-    return {"status": "ok", "service": "bestshot-merge"}
+    return {"status": "ok", "service": "bestshot-photos"}
 
 
 @router.post("/organizer/projects", response_model=OrganizerProjectResponse, status_code=201)

@@ -19,8 +19,8 @@ BestShot-photos is a privacy-first travel photo organizer that runs locally. It 
 
 Install Python 3.11+ and Node.js 20+, then double-click one of these files in the project root:
 
-- `启动 BestShot.bat`: start the services and open the app in your browser
-- `停止 BestShot.bat`: stop the background services
+- `Start BestShot.bat`: start the services and open the app in your browser
+- `Stop BestShot.bat`: stop the background services
 
 Dependencies are installed automatically on the first launch, so the initial startup may take a few minutes.
 

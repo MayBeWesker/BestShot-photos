@@ -29,7 +29,7 @@ function Test-BestShotReady {
 
 if (Test-BestShotReady) {
     Start-Process $AppUrl
-    Write-Host 'BestShot Merge is already running. The browser has been opened.' -ForegroundColor Green
+    Write-Host 'BestShot-photos is already running. The browser has been opened.' -ForegroundColor Green
     exit 0
 }
 
@@ -52,7 +52,7 @@ if (-not (Test-Path -LiteralPath (Join-Path $FrontendRoot 'node_modules'))) {
     npm --prefix $FrontendRoot install
 }
 
-Write-Host 'Starting BestShot Merge...' -ForegroundColor Cyan
+Write-Host 'Starting BestShot-photos...' -ForegroundColor Cyan
 
 $BackendProcess = Start-Process -FilePath $PythonExe -ArgumentList @('-m', 'uvicorn', 'app.main:app', '--host', '127.0.0.1', '--port', '8000') -WorkingDirectory $BackendRoot -WindowStyle Hidden -RedirectStandardOutput $BackendLog -RedirectStandardError $BackendErrorLog -PassThru
 $FrontendProcess = Start-Process -FilePath 'npm.cmd' -ArgumentList @('run', 'dev') -WorkingDirectory $FrontendRoot -WindowStyle Hidden -RedirectStandardOutput $FrontendLog -RedirectStandardError $FrontendErrorLog -PassThru
@@ -75,11 +75,11 @@ for ($Attempt = 1; $Attempt -le 30; $Attempt++) {
 if (-not $Ready) {
     if (-not $BackendProcess.HasExited) { Stop-Process -Id $BackendProcess.Id -Force }
     if (-not $FrontendProcess.HasExited) { Stop-Process -Id $FrontendProcess.Id -Force }
-    throw "BestShot Merge failed to start. Logs: $RuntimeRoot"
+    throw "BestShot-photos failed to start. Logs: $RuntimeRoot"
 }
 
 Start-Process $AppUrl
-Write-Host 'BestShot Merge is ready. The browser has been opened.' -ForegroundColor Green
+Write-Host 'BestShot-photos is ready. The browser has been opened.' -ForegroundColor Green
 Write-Host 'You can close this window.'
 Start-Sleep -Seconds 2
 

@@ -19,8 +19,8 @@ BestShot-photos 是一款本地运行、隐私优先的旅行照片整理工具�
 
 请先安装 Python 3.11+ 和 Node.js 20+，然后双击项目根目录中的：
 
-- `启动 BestShot.bat`：启动服务并打开浏览器
-- `停止 BestShot.bat`：停止后台服务
+- `Start BestShot.bat`：启动服务并打开浏览器
+- `Stop BestShot.bat`：停止后台服务
 
 首次启动会自动安装依赖，可能需要等待几分钟。
 

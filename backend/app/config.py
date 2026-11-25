@@ -2,7 +2,7 @@ from pathlib import Path
 import os
 
 
-APP_NAME = "BestShot Merge"
+APP_NAME = "BestShot-photos"
 MAX_IMAGE_EDGE = 6000
 MAX_IMAGE_PIXELS = 40_000_000
 # The organizer processes one image at a time and stores the untouched upload,
