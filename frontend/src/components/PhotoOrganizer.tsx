@@ -81,20 +81,20 @@ export function PhotoOrganizer({ onError, onActiveChange }: Props) {
   return (
     <main className="organizer-upload">
       <section className="organizer-intro">
-        <div className="eyebrow"><span /> SMART ORGANIZER</div>
-        <h1>把旅行照片，<br /><em>整理得更好。</em></h1>
-        <p>自动完成相似场景分组和质量排序，让你更快选出真正值得分享的照片。</p>
+        <div className="eyebrow"><span /> AI PHOTO ORGANIZER</div>
+        <h1>只管记录精彩，<br />剩下的交给 <em>AI</em></h1>
+        <p>自动分组、智能排序，再把旅途中真正值得分享的照片挑出来。</p>
         <div className="organizer-feature-list">
-          <div><Check size={16} /><span><strong>自动分组</strong><small>识别相似场景</small></span></div>
-          <div><Check size={16} /><span><strong>质量排序</strong><small>好照片优先展示</small></span></div>
-          <div><LockKeyhole size={16} /><span><strong>本地整理</strong><small>原图保留在设备</small></span></div>
+          <div><Check size={15} /><strong>相似场景自动归组</strong></div>
+          <div><Medal size={15} /><strong>好照片优先展示</strong></div>
+          <div><LockKeyhole size={15} /><strong>原图保留在本地</strong></div>
         </div>
       </section>
 
       <section className="batch-card">
         <div className="batch-card-heading">
-          <div><small>STEP 01</small><h2>导入旅行照片</h2></div>
-          <span>{files.length} / 200</span>
+          <div><small>ADD PHOTOS</small><h2>选择旅行照片</h2></div>
+          <span>已选 {files.length} / 200</span>
         </div>
         <div
           className={`batch-dropzone ${files.length ? 'has-files' : ''}`}
@@ -115,7 +115,7 @@ export function PhotoOrganizer({ onError, onActiveChange }: Props) {
               <i><Plus size={17} />继续添加</i>
             </div>
           ) : (
-            <div className="dropzone-empty"><UploadCloud size={32} /><strong>拖入照片，或点击选择</strong><span>支持 JPG、JPEG、PNG、WebP、HEIC · 可混合上传 · 最多 200 张</span></div>
+            <div className="dropzone-empty"><UploadCloud size={32} /><strong>拖放照片到这里</strong><span>或点击浏览 · 支持 JPG、PNG、WebP、HEIC / HEIF · 最多 200 张</span></div>
           )}
         </div>
 
