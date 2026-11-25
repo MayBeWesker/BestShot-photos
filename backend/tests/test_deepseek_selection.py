@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 from app.errors import BestShotError
-from app.services.deepseek_selection import replace_moments_photo, select_moments_photos
+from app.services.deepseek_selection import regenerate_moments_photos, replace_moments_photo, select_moments_photos
 from app.storage.organizer import OrganizerStore
 
 
@@ -149,3 +149,54 @@ def test_smart_replacement_uses_an_unselected_group_and_reviews_grid(tmp_path):
     assert result["photo_id"] == "photo_011"
     assert result["group_id"] == "group_011"
     assert "相邻图片" in result["grid_review"]
+
+
+def test_regeneration_sends_bounded_previous_snapshot_and_instruction(tmp_path):
+    store, metadata = make_organizer_project(tmp_path, count=10)
+    previous = {
+        "story_title": "旧标题",
+        "summary": "旧说明" * 500,
+        "grid_review": "旧复核" * 500,
+        "layout_rationale": "旧布局" * 500,
+        "caption_suggestion": "旧文案" * 500,
+        "selected": [
+            {"rank": index, "group_id": f"group_{index:03d}", "photo_id": f"photo_{index:03d}", "reason": "旧理由" * 100, "role": "旧角色"}
+            for index in range(1, 11)
+        ],
+    }
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        payload = json.loads(request.content)
+        assert payload["max_tokens"] == 8192
+        prompt = payload["messages"][0]["content"][0]["text"]
+        assert "多选建筑，减少夜景" in prompt
+        assert "旧标题" in prompt
+        assert "只使用这一份上一版快照" in prompt
+        assert len(prompt) < 9000
+        assert prompt.count('"photo_id"') == 9
+        selected = [
+            {"candidate_id": f"photo_{index:03d}", "reason": "新的理由", "role": "新的角色"}
+            for index in range(2, 11)
+        ]
+        return httpx.Response(200, json={"choices": [{"message": {"content": json.dumps({
+            "story_title": "重新生成的故事",
+            "selected": selected,
+            "summary": "新的说明",
+            "grid_review": "新的整体复核",
+            "layout_rationale": "新的布局",
+            "caption_suggestion": "新的文案",
+        }, ensure_ascii=False)}}]})
+
+    with httpx.Client(transport=httpx.MockTransport(handler)) as client:
+        result = regenerate_moments_photos(
+            metadata,
+            previous,
+            "多选建筑，减少夜景",
+            store=store,
+            api_key="test-key",
+            client=client,
+        )
+
+    assert result["story_title"] == "重新生成的故事"
+    assert result["selected"][0]["photo_id"] == "photo_002"
+    assert len(result["selected"]) == 9

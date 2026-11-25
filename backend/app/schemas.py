@@ -90,11 +90,11 @@ class OrganizerProjectResponse(BaseModel):
 
 
 class MomentsPhotoSelection(BaseModel):
-    rank: int
-    group_id: str
-    photo_id: str
-    reason: str
-    role: str
+    rank: int = Field(ge=1, le=9)
+    group_id: str = Field(max_length=80)
+    photo_id: str = Field(max_length=80)
+    reason: str = Field(max_length=200)
+    role: str = Field(max_length=40)
 
 
 class MomentsSelectionContext(BaseModel):
@@ -126,15 +126,20 @@ class MomentsReplacementResponse(BaseModel):
 
 
 class MomentsSelectionResponse(BaseModel):
-    project_id: str
-    model: str
-    created_at: str
-    story_title: str
-    summary: str
-    grid_review: str
-    layout_rationale: str
-    caption_suggestion: str
-    analysis_candidate_count: int
-    quality_threshold: float
-    selected: list[MomentsPhotoSelection]
+    project_id: str = Field(max_length=120)
+    model: str = Field(max_length=120)
+    created_at: str = Field(max_length=80)
+    story_title: str = Field(max_length=120)
+    summary: str = Field(max_length=500)
+    grid_review: str = Field(max_length=800)
+    layout_rationale: str = Field(max_length=800)
+    caption_suggestion: str = Field(max_length=500)
+    analysis_candidate_count: int = Field(ge=1, le=60)
+    quality_threshold: float = Field(ge=0, le=100)
+    selected: list[MomentsPhotoSelection] = Field(min_length=1, max_length=9)
+
+
+class MomentsRegenerationRequest(BaseModel):
+    instruction: str = Field(default="", max_length=800)
+    previous: MomentsSelectionResponse
 

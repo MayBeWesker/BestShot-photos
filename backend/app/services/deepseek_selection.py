@@ -282,6 +282,103 @@ def select_moments_photos(
     }
 
 
+def _compact_previous_selection(previous: dict) -> dict:
+    """Keep one bounded snapshot so regeneration never grows a chat history."""
+    compact_selected = []
+    raw_selected = previous.get("selected")
+    if isinstance(raw_selected, list):
+        for item in raw_selected[:9]:
+            if not isinstance(item, dict):
+                continue
+            compact_selected.append({
+                "rank": int(item.get("rank", len(compact_selected) + 1)),
+                "group_id": str(item.get("group_id", ""))[:80],
+                "photo_id": str(item.get("photo_id", ""))[:80],
+                "role": str(item.get("role", ""))[:40],
+                "reason": str(item.get("reason", ""))[:120],
+            })
+    return {
+        "story_title": str(previous.get("story_title", ""))[:120],
+        "summary": str(previous.get("summary", ""))[:300],
+        "grid_review": str(previous.get("grid_review", ""))[:400],
+        "layout_rationale": str(previous.get("layout_rationale", ""))[:400],
+        "caption_suggestion": str(previous.get("caption_suggestion", ""))[:400],
+        "selected": compact_selected,
+    }
+
+
+def regenerate_moments_photos(
+    metadata: dict,
+    previous: dict,
+    instruction: str = "",
+    *,
+    store: OrganizerStore = organizer_store,
+    api_key: str | None = None,
+    base_url: str = DEEPSEEK_BASE_URL,
+    model: str = DEEPSEEK_MODEL,
+    client: httpx.Client | None = None,
+) -> dict:
+    credential = (api_key if api_key is not None else DEEPSEEK_API_KEY).strip()
+    if not credential:
+        raise BestShotError(
+            "尚未配置 AI 服务密钥。请在本地 .env 中填写服务密钥后重启应用。",
+            code="deepseek_not_configured",
+            status_code=503,
+        )
+
+    image_blocks, candidates, quality_threshold = _candidate_blocks(metadata, store)
+    if not candidates:
+        raise BestShotError("当前没有可供重新生成的照片分组。", code="no_candidates")
+    target_count = min(9, len(candidates))
+    bounded_instruction = str(instruction or "").strip()[:800]
+    compact_previous = _compact_previous_selection(previous or {})
+    change_request = bounded_instruction or "没有额外要求，请重新审视候选图片，给出另一套更好的故事与九图组合。"
+    prompt = (
+        f"你是旅行朋友圈九宫格编辑。请从下方 {len(candidates)} 个不同分组的代表图中，"
+        f"重新生成恰好 {target_count} 张图片的九宫格。每个分组最多选择一张。"
+        "这是一次基于上一版结果的定向改进：保留确实合适的内容，也可以更换图片或重新排序。"
+        "优先主体明确、背景干净、杂物少、人物状态自然的照片，并避免相邻画面在主体、场景、视角和颜色上过于相似。"
+        f"\n用户本次修改要求：{change_request}"
+        f"\n上一版精简结果：{json.dumps(compact_previous, ensure_ascii=False)}"
+        "\n只使用这一份上一版快照作为历史上下文，不要假设还有更早的对话。"
+        "请仅输出 JSON："
+        '{"story_title":"新的故事标题","selected":[{"candidate_id":"photo_001","reason":"改进理由","role":"叙事角色"}],'
+        '"summary":"新的整体说明","grid_review":"整体美感与相邻相似度判断",'
+        '"layout_rationale":"新的排列规律","caption_suggestion":"新的朋友圈文案"}。'
+        "candidate_id 必须逐字使用下方提供的候选 ID。"
+    )
+
+    owns_client = client is None
+    request_client = client or httpx.Client(timeout=httpx.Timeout(180.0, connect=20.0))
+    try:
+        parsed = _request_json(
+            request_client,
+            credential,
+            base_url,
+            model,
+            [{"type": "text", "text": prompt}, *image_blocks],
+            max_tokens=8192,
+        )
+    finally:
+        if owns_client:
+            request_client.close()
+
+    selected = _normalize_selection(parsed.get("selected"), candidates, target_count)
+    return {
+        "project_id": metadata["id"],
+        "model": model,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "story_title": str(parsed.get("story_title") or compact_previous.get("story_title") or "这一程的九个瞬间")[:120],
+        "summary": str(parsed.get("summary") or "已根据你的要求重新整理九图。")[:500],
+        "grid_review": str(parsed.get("grid_review") or "已重新检查整体美感与相邻图片的相似度。")[:800],
+        "layout_rationale": str(parsed.get("layout_rationale") or "按新的故事节奏重新排列。")[:800],
+        "caption_suggestion": str(parsed.get("caption_suggestion") or compact_previous.get("caption_suggestion") or "记录旅途中值得分享的九个瞬间。")[:500],
+        "analysis_candidate_count": len(candidates),
+        "quality_threshold": quality_threshold,
+        "selected": selected,
+    }
+
+
 def replace_moments_photo(
     metadata: dict,
     photo_ids: list[str],

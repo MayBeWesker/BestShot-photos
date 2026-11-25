@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowLeft, Bot, Check, ChevronRight, Copy, Download, Images, LoaderCircle, LockKeyhole, Medal, Plus, RefreshCw, Sparkles, Trash2, UploadCloud, WandSparkles, X } from 'lucide-react'
-import { createMomentsReplacement, createMomentsSelection, createOrganizerProject, deleteOrganizerProject, downloadMomentsArchive } from '../api'
+import { createMomentsRegeneration, createMomentsReplacement, createMomentsSelection, createOrganizerProject, deleteOrganizerProject, downloadMomentsArchive } from '../api'
 import type { GroupSensitivity, MomentsContext, MomentsSelection, MomentsTone, OrganizerProject, PhotoGroup } from '../types'
 
 interface Props {
@@ -157,11 +157,19 @@ export function PhotoOrganizer({ onError, onActiveChange }: Props) {
 function OrganizerResults({ project, selected, onSelect, onReset, onError }: { project: OrganizerProject; selected?: PhotoGroup; onSelect: (id: string) => void; onReset: () => void; onError: (message: string) => void }) {
   const [moments, setMoments] = useState<MomentsSelection | null>(null)
   const [selectingMoments, setSelectingMoments] = useState(false)
+  const [regeneratingMoments, setRegeneratingMoments] = useState(false)
   const [downloadingMoments, setDownloadingMoments] = useState(false)
   const [smartReplacingRank, setSmartReplacingRank] = useState<number | null>(null)
   const [contextDialogOpen, setContextDialogOpen] = useState(false)
+  const [regenerationDialogOpen, setRegenerationDialogOpen] = useState(false)
+  const groupButtonRefs = useRef(new Map<string, HTMLButtonElement>())
   const byId = new Map(project.photos.map((photo) => [photo.id, photo]))
   const selectedPhotos = (selected?.photo_ids ?? []).map((id) => byId.get(id)).filter(Boolean) as OrganizerProject['photos']
+
+  useEffect(() => {
+    if (!selected?.id) return
+    groupButtonRefs.current.get(selected.id)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }, [selected?.id])
 
   const selectForMoments = async (context: MomentsContext) => {
     try {
@@ -183,12 +191,28 @@ function OrganizerResults({ project, selected, onSelect, onReset, onError }: { p
     } : current)
   }
 
+  const regenerateMoments = async (instruction: string) => {
+    if (!moments) return
+    try {
+      setRegeneratingMoments(true)
+      const result = await createMomentsRegeneration(project.id, moments, instruction.slice(0, 800))
+      setMoments(result)
+      setRegenerationDialogOpen(false)
+      if (result.selected[0]?.group_id) onSelect(result.selected[0].group_id)
+    } catch (reason) {
+      onError(reason instanceof Error ? reason.message : '九图重新生成失败。')
+    } finally {
+      setRegeneratingMoments(false)
+    }
+  }
+
   const smartReplaceMoment = async (rank: number) => {
     if (!moments) return
     try {
       setSmartReplacingRank(rank)
       const replacement = await createMomentsReplacement(project.id, moments.selected.map((item) => item.photo_id), rank)
       replaceMomentGroup(rank, replacement.group_id, replacement.photo_id, replacement.reason, replacement.role, replacement.grid_review)
+      onSelect(replacement.group_id)
     } catch (reason) {
       onError(reason instanceof Error ? reason.message : '智能换组失败。')
     } finally {
@@ -235,7 +259,7 @@ function OrganizerResults({ project, selected, onSelect, onReset, onError }: { p
             {project.groups.map((group) => {
               const cover = byId.get(group.photo_ids[0])
               return (
-                <button key={group.id} className={selected?.id === group.id ? 'active' : ''} type="button" onClick={() => onSelect(group.id)}>
+                <button ref={(node) => { if (node) groupButtonRefs.current.set(group.id, node); else groupButtonRefs.current.delete(group.id) }} key={group.id} className={selected?.id === group.id ? 'active' : ''} type="button" onClick={() => onSelect(group.id)}>
                   {cover && <img src={cover.thumbnail_url} alt="" />}
                   <span><strong>{group.name}</strong><small>{group.photo_ids.length} 张 · 最高 {cover?.quality.score ?? 0} 分</small></span>
                   <ChevronRight size={14} />
@@ -245,7 +269,7 @@ function OrganizerResults({ project, selected, onSelect, onReset, onError }: { p
           </div>
         </aside>
         <section className="photo-group-view">
-          {moments && <MomentsResult selection={moments} project={project} downloading={downloadingMoments} smartReplacingRank={smartReplacingRank} onDownload={downloadMoments} onReplace={replaceMomentGroup} onSmartReplace={smartReplaceMoment} />}
+          {moments && <MomentsResult selection={moments} project={project} downloading={downloadingMoments} regenerating={regeneratingMoments} smartReplacingRank={smartReplacingRank} onDownload={downloadMoments} onReplace={replaceMomentGroup} onSmartReplace={smartReplaceMoment} onRegenerate={() => setRegenerationDialogOpen(true)} onSelectGroup={onSelect} />}
           <div className="group-view-heading">
             <div><span className="live-dot" /><div><h1>{selected?.name}</h1><p>已按综合质量从高到低排列</p></div></div>
             <span className="local-badge"><i /> LOCAL ANALYSIS</span>
@@ -276,6 +300,7 @@ function OrganizerResults({ project, selected, onSelect, onReset, onError }: { p
         </section>
       </div>
       {contextDialogOpen && <MomentsContextDialog loading={selectingMoments} onClose={() => setContextDialogOpen(false)} onGenerate={selectForMoments} />}
+      {moments && regenerationDialogOpen && <MomentsRegenerationDialog loading={regeneratingMoments} onClose={() => setRegenerationDialogOpen(false)} onGenerate={regenerateMoments} />}
     </main>
   )
 }
@@ -322,14 +347,36 @@ function MomentsContextDialog({ loading, onClose, onGenerate }: { loading: boole
   )
 }
 
-function MomentsResult({ selection, project, downloading, smartReplacingRank, onDownload, onReplace, onSmartReplace }: { selection: MomentsSelection; project: OrganizerProject; downloading: boolean; smartReplacingRank: number | null; onDownload: () => void; onReplace: (rank: number, groupId: string, photoId: string, reason: string, role?: string, gridReview?: string) => void; onSmartReplace: (rank: number) => Promise<void> }) {
+function MomentsRegenerationDialog({ loading, onClose, onGenerate }: { loading: boolean; onClose: () => void; onGenerate: (instruction: string) => void }) {
+  const [instruction, setInstruction] = useState('')
+  return (
+    <div className="dialog-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !loading) onClose() }}>
+      <form className="moments-dialog moments-regeneration-dialog" role="dialog" aria-modal="true" aria-labelledby="moments-regeneration-title" onSubmit={(event) => { event.preventDefault(); onGenerate(instruction.trim()) }}>
+        <header><div><span><RefreshCw size={18} /></span><div><h2 id="moments-regeneration-title">重新生成九图</h2></div></div><button type="button" disabled={loading} onClick={onClose} aria-label="关闭"><X size={17} /></button></header>
+        <label className="regeneration-field"><span>修改要求（可选）</span><textarea value={instruction} maxLength={800} rows={5} onChange={(event) => setInstruction(event.target.value)} placeholder="例如：减少夜景，多选人物和旅行细节，整体更轻松。" /><small>{instruction.length} / 800</small></label>
+        <p className="dialog-data-note"><LockKeyhole size={13} />仅携带当前结果的精简快照，不累积完整对话历史</p>
+        <footer><button type="button" className="dialog-skip" disabled={loading} onClick={onClose}>取消</button><button type="submit" className="dialog-generate" disabled={loading}>{loading ? <LoaderCircle className="spin" size={15} /> : <RefreshCw size={15} />}{loading ? '正在重新生成…' : '重新生成'}</button></footer>
+      </form>
+    </div>
+  )
+}
+
+function MomentsResult({ selection, project, downloading, regenerating, smartReplacingRank, onDownload, onReplace, onSmartReplace, onRegenerate, onSelectGroup }: { selection: MomentsSelection; project: OrganizerProject; downloading: boolean; regenerating: boolean; smartReplacingRank: number | null; onDownload: () => void; onReplace: (rank: number, groupId: string, photoId: string, reason: string, role?: string, gridReview?: string) => void; onSmartReplace: (rank: number) => Promise<void>; onRegenerate: () => void; onSelectGroup: (groupId: string) => void }) {
   const [manualReplaceRank, setManualReplaceRank] = useState<number | null>(null)
   const [activeMenuRank, setActiveMenuRank] = useState<number | null>(null)
+  const [activePreviewRank, setActivePreviewRank] = useState(selection.selected[0]?.rank ?? 1)
   const [captionCopied, setCaptionCopied] = useState(false)
   const byId = new Map(project.photos.map((photo) => [photo.id, photo]))
   const groupsById = new Map(project.groups.map((group) => [group.id, group]))
   const usedGroupIds = new Set(selection.selected.map((item) => item.group_id))
   const availableGroups = project.groups.filter((group) => !usedGroupIds.has(group.id))
+  const activePreview = selection.selected.find((item) => item.rank === activePreviewRank) ?? selection.selected[0]
+  const activePreviewGroup = activePreview ? groupsById.get(activePreview.group_id) : undefined
+  const activePreviewPhotos = (activePreviewGroup?.photo_ids ?? []).map((photoId) => byId.get(photoId)).filter(Boolean) as OrganizerProject['photos']
+
+  useEffect(() => {
+    if (!selection.selected.some((item) => item.rank === activePreviewRank)) setActivePreviewRank(selection.selected[0]?.rank ?? 1)
+  }, [activePreviewRank, selection])
   const copyCaption = async () => {
     try {
       await navigator.clipboard.writeText(selection.caption_suggestion)
@@ -353,7 +400,6 @@ function MomentsResult({ selection, project, downloading, smartReplacingRank, on
         <div className="moments-heading-actions"><span>{selection.analysis_candidate_count} 张候选 · {selection.quality_threshold} 分门槛</span><button type="button" disabled={downloading} onClick={onDownload}>{downloading ? <LoaderCircle className="spin" size={15} /> : <Download size={15} />}{downloading ? '正在打包…' : '下载九图'}</button></div>
       </div>
       <div className="moments-caption moments-caption-top"><div><small>朋友圈文案</small><button type="button" onClick={copyCaption}>{captionCopied ? <Check size={15} /> : <Copy size={15} />}{captionCopied ? '已复制' : '复制文案'}</button></div><p>{selection.caption_suggestion}</p></div>
-      <p className="moments-summary">{selection.summary}</p>
       <div className="moments-main-layout">
         <div className="moments-grid">
           {selection.selected.map((item) => {
@@ -362,7 +408,7 @@ function MomentsResult({ selection, project, downloading, smartReplacingRank, on
             const replacing = smartReplacingRank === item.rank
             const menuOpen = activeMenuRank === item.rank
             return (
-              <div className={`moments-tile ${menuOpen ? 'menu-open' : ''}`} role="button" tabIndex={0} key={item.rank} onClick={() => setActiveMenuRank(menuOpen ? null : item.rank)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setActiveMenuRank(menuOpen ? null : item.rank) } }} aria-expanded={menuOpen} aria-label={`调整第 ${item.rank} 格：${photo.original_name}`}>
+              <div className={`moments-tile ${menuOpen ? 'menu-open' : ''} ${activePreview?.rank === item.rank ? 'preview-active' : ''}`} role="button" tabIndex={0} key={item.rank} onClick={() => { setActivePreviewRank(item.rank); onSelectGroup(item.group_id); setActiveMenuRank(menuOpen ? null : item.rank) }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setActivePreviewRank(item.rank); onSelectGroup(item.group_id); setActiveMenuRank(menuOpen ? null : item.rank) } }} aria-expanded={menuOpen} aria-label={`调整第 ${item.rank} 格：${photo.original_name}`}>
                 <img src={photo.thumbnail_url} alt={photo.original_name} />
                 <strong>{item.rank}</strong><span>{item.role}</span>
                 <i className="moments-tile-hint"><RefreshCw size={14} />点击调整</i>
@@ -377,9 +423,16 @@ function MomentsResult({ selection, project, downloading, smartReplacingRank, on
           })}
         </div>
         <aside className="moments-insights">
-          <div className="moments-adjust-tip"><span><RefreshCw size={17} /></span><div><strong>点击九图中的任意图片</strong><p>可以选择手动换组或智能换组，下载内容会同步更新。</p></div></div>
-          <div className="moments-review"><small>整体审美复核</small><p>{selection.grid_review || '已从整体构图、相邻相似度与视觉节奏复核最终九图。'}</p></div>
-          <div className="moments-layout"><small>排列思路</small><p>{selection.layout_rationale}</p></div>
+          <section className="moments-control-card moments-regenerate-card">
+            <div><span><RefreshCw size={17} /></span><strong>重新生成九图</strong></div>
+            <button type="button" disabled={regenerating} onClick={onRegenerate}>{regenerating ? <LoaderCircle className="spin" size={15} /> : <WandSparkles size={15} />}{regenerating ? '正在生成…' : '重新生成'}</button>
+          </section>
+          {activePreview && activePreviewGroup && <section className="moments-control-card moments-group-preview">
+            <header><div><small>第 {activePreview.rank} 格 · 当前分组</small><strong>{activePreviewGroup.name}</strong></div><span>{activePreviewPhotos.length} 张</span></header>
+            <div className="moments-group-thumbs">
+              {activePreviewPhotos.map((photo) => <button type="button" className={photo.id === activePreview.photo_id ? 'active' : ''} key={photo.id} disabled={photo.id === activePreview.photo_id} onClick={() => onReplace(activePreview.rank, activePreview.group_id, photo.id, '由你从当前分组中选择。', activePreview.role)} title={`${photo.original_name} · ${photo.quality.score} 分`}><img src={photo.thumbnail_url} alt={photo.original_name} /><span>{photo.quality.score}</span></button>)}
+            </div>
+          </section>}
         </aside>
       </div>
       <p className="moments-privacy"><LockKeyhole size={12} />仅在点击生成后分析高分分组的代表缩略图，原图不会上传。</p>
@@ -392,7 +445,7 @@ function MomentsResult({ selection, project, downloading, smartReplacingRank, on
               return <article key={group.id}><header><strong>{group.name}</strong><span>{group.photo_ids.length} 张 · 最高 {cover?.quality.score ?? 0} 分</span></header><div>{group.photo_ids.map((photoId) => {
                 const candidate = byId.get(photoId)
                 if (!candidate) return null
-                return <button type="button" key={photoId} onClick={() => { onReplace(manualReplaceRank, group.id, photoId, '由你从新的分组中手动选择。', '手动精选'); setManualReplaceRank(null) }} title={`${candidate.original_name} · ${candidate.quality.score} 分`}><img src={candidate.thumbnail_url} alt="" /><span>{candidate.quality.score}</span></button>
+                return <button type="button" key={photoId} onClick={() => { onReplace(manualReplaceRank, group.id, photoId, '由你从新的分组中手动选择。', '手动精选'); onSelectGroup(group.id); setManualReplaceRank(null) }} title={`${candidate.original_name} · ${candidate.quality.score} 分`}><img src={candidate.thumbnail_url} alt="" /><span>{candidate.quality.score}</span></button>
               })}</div></article>
             })}
             {availableGroups.length === 0 && <p className="no-replacement-groups">所有分组都已经用于当前九图，没有其他分组可以替换。</p>}

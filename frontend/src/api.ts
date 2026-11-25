@@ -87,6 +87,14 @@ export function createMomentsSelection(projectId: string, context: MomentsContex
   })
 }
 
+export function createMomentsRegeneration(projectId: string, previous: MomentsSelection, instruction: string): Promise<MomentsSelection> {
+  return request(`/api/organizer/projects/${projectId}/moments-regeneration`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ previous, instruction }),
+  })
+}
+
 export async function downloadMomentsArchive(projectId: string, photoIds: string[]): Promise<Blob> {
   const response = await fetch(`/api/organizer/projects/${projectId}/moments-download`, {
     method: 'POST',

@@ -9,13 +9,13 @@ from fastapi.responses import FileResponse, StreamingResponse
 
 from ..errors import BestShotError
 from ..config import ORGANIZER_MAX_IMAGE_EDGE, ORGANIZER_MAX_IMAGE_PIXELS
-from ..schemas import ComposeResponse, HealthResponse, MomentsDownloadRequest, MomentsReplacementRequest, MomentsReplacementResponse, MomentsSelectionRequest, MomentsSelectionResponse, OrganizerProjectResponse, ProjectResponse
+from ..schemas import ComposeResponse, HealthResponse, MomentsDownloadRequest, MomentsRegenerationRequest, MomentsReplacementRequest, MomentsReplacementResponse, MomentsSelectionRequest, MomentsSelectionResponse, OrganizerProjectResponse, ProjectResponse
 from ..services.global_align import align_global
 from ..services.mask import process_mask
 from ..services.pipeline import compose
 from ..services.preprocess import decode_upload, read_image, write_image
 from ..services.photo_classifier import cluster_photos, extract_features, extract_taken_at, score_quality
-from ..services.deepseek_selection import replace_moments_photo, select_moments_photos
+from ..services.deepseek_selection import regenerate_moments_photos, replace_moments_photo, select_moments_photos
 from ..storage.organizer import organizer_store
 from ..storage.projects import store
 
@@ -171,6 +171,19 @@ def download_moments_archive(project_id: str, request: MomentsDownloadRequest) -
         media_type="application/zip",
         headers={"Content-Disposition": 'attachment; filename="bestshot-moments.zip"'},
     )
+
+
+@router.post("/organizer/projects/{project_id}/moments-regeneration", response_model=MomentsSelectionResponse)
+def regenerate_moments_selection(project_id: str, request: MomentsRegenerationRequest) -> dict:
+    metadata = organizer_store.load(project_id)
+    result = regenerate_moments_photos(
+        metadata,
+        previous=request.previous.model_dump(),
+        instruction=request.instruction,
+    )
+    metadata["moments_selection"] = result
+    organizer_store.save(metadata)
+    return result
 
 
 @router.post("/organizer/projects/{project_id}/moments-replacement", response_model=MomentsReplacementResponse)
