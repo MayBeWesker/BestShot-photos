@@ -1,36 +1,38 @@
 # BestShot-photos
 
-BestShot-photos 是一款本地运行、隐私优先的旅行照片整理工具。它可以自动归类相似照片、按质量排序，并从旅行照片中生成适合朋友圈发布的九图与文案。
+English | [简体中文](README.zh-CN.md)
 
-## 核心功能
+BestShot-photos is a privacy-first travel photo organizer that runs locally. It groups similar photos, ranks them by quality, and creates a nine-photo story with a ready-to-use social media caption.
 
-- 批量导入 JPG、JPEG、PNG、WebP、HEIC 和 HEIF 图片
-- 自动归类相似场景，并按每组最高分排序
-- 根据清晰度、曝光、色彩、构图和画面简洁度评估照片质量
-- 从候选照片中生成具有故事线和布局逻辑的朋友圈九图
-- 支持手动或智能换组，并将最终九张原图打包下载
-- 支持连拍照片的局部融合与高清 PNG 导出
+## Core Features
 
-> 照片整理默认在本地完成。只有用户主动生成朋友圈时，候选照片的压缩缩略图才会发送到用户配置的视觉 API；原图和 API Key 不会上传到前端或由项目保存。
+- Import JPG, JPEG, PNG, WebP, HEIC, and HEIF images in one batch
+- Group similar scenes and rank groups by their best photo
+- Score photos by sharpness, exposure, color, composition, and visual cleanliness
+- Build a coherent nine-photo story with an intentional layout
+- Replace selections manually or with AI assistance, then download the final photos as a ZIP archive
+- Blend the best parts of burst photos and export the result as a high-resolution PNG
 
-## Windows 快速启动
+> Photo organization runs locally by default. Only compressed thumbnails of candidate photos are sent to the user-configured vision API when the user explicitly generates a social media post. Original photos stay local, and the API key is read only by the local backend.
 
-请先安装 Python 3.11+ 和 Node.js 20+，然后双击项目根目录中的：
+## Windows Quick Start
 
-- `启动 BestShot.bat`：启动服务并打开浏览器
-- `停止 BestShot.bat`：停止后台服务
+Install Python 3.11+ and Node.js 20+, then double-click one of these files in the project root:
 
-首次启动会自动安装依赖，所需时间可能稍长。
+- `启动 BestShot.bat`: start the services and open the app in your browser
+- `停止 BestShot.bat`: stop the background services
 
-## 配置朋友圈生成（可选）
+Dependencies are installed automatically on the first launch, so the initial startup may take a few minutes.
 
-1. 将 `.env.example` 复制为 `.env`。
-2. 在 `.env` 中填写 `DEEPSEEK_API_KEY`。
-3. 重启 BestShot-photos，在分类完成后点击“生成朋友圈”。
+## Configure AI Post Generation (Optional)
 
-## 开发运行
+1. Copy `.env.example` to `.env`.
+2. Add your API key as `DEEPSEEK_API_KEY` in `.env`.
+3. Restart BestShot-photos and click **Generate Post** after photo classification is complete.
 
-后端：
+## Development
+
+Start the backend:
 
 ```powershell
 cd backend
@@ -39,7 +41,7 @@ python -m venv .venv
 .\.venv\Scripts\python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-前端（另一个终端）：
+Start the frontend in another terminal:
 
 ```powershell
 cd frontend
@@ -47,7 +49,7 @@ npm install
 npm run dev
 ```
 
-## 验证
+## Verification
 
 ```powershell
 cd backend
@@ -57,11 +59,11 @@ cd ..\frontend
 npm run build
 ```
 
-## 技术栈
+## Tech Stack
 
-- 前端：React、TypeScript、Konva
-- 后端：FastAPI、OpenCV
-- 数据：保存在本地 `.bestshot-data/` 目录
+- Frontend: React, TypeScript, and Konva
+- Backend: FastAPI and OpenCV
+- Local data: `.bestshot-data/`
 
 ## License
 
