@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { CircleAlert, Images, Layers3, Sparkles, X } from 'lucide-react'
-import { alignProject, createProject, deleteProject } from './api'
+import { alignProject, createGroupMerge, createProject, deleteProject } from './api'
 import { ImageEditor } from './components/ImageEditor'
 import { ImageUploader } from './components/ImageUploader'
 import { PhotoOrganizer } from './components/PhotoOrganizer'
@@ -36,6 +36,17 @@ export default function App() {
     }
   }
 
+  const mergeGroup = async (organizerId: string, mainPhotoId: string, sourcePhotoId: string) => {
+    setError(null)
+    const created = await createGroupMerge(organizerId, mainPhotoId, sourcePhotoId)
+    try {
+      setProject(await alignProject(created.id))
+    } catch (reason) {
+      try { await deleteProject(created.id) } catch { /* Best-effort cleanup. */ }
+      throw reason
+    }
+  }
+
   return (
     <div className="app">
       {!project && !organizerActive && (
@@ -48,7 +59,8 @@ export default function App() {
           <span className="local-badge"><i />本地处理</span>
         </nav>
       )}
-      {project ? <ImageEditor project={project} onProject={setProject} onReset={reset} onError={setError} /> : mode === 'organize' ? <PhotoOrganizer onError={(message) => setError(message)} onActiveChange={setOrganizerActive} /> : <ImageUploader loading={loading} onSubmit={start} />}
+      {mode === 'organize' && <div hidden={!!project}><PhotoOrganizer onError={(message) => setError(message)} onActiveChange={setOrganizerActive} onMerge={mergeGroup} /></div>}
+      {project ? <ImageEditor key={project.id} project={project} onProject={setProject} onReset={reset} onError={setError} /> : mode === 'merge' ? <ImageUploader loading={loading} onSubmit={start} /> : null}
       {error && <div className="error-toast" role="alert"><CircleAlert size={19} /><span>{error}</span><button type="button" onClick={() => setError(null)}><X size={16} /></button></div>}
     </div>
   )

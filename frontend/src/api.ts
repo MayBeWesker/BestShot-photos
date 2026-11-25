@@ -79,6 +79,14 @@ export function deleteOrganizerProject(projectId: string): Promise<void> {
   return request(`/api/organizer/projects/${projectId}`, { method: 'DELETE' })
 }
 
+export function createGroupMerge(projectId: string, mainPhotoId: string, sourcePhotoId: string): Promise<PhotoProject> {
+  return request(`/api/organizer/projects/${projectId}/merge`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ main_photo_id: mainPhotoId, source_photo_id: sourcePhotoId }),
+  })
+}
+
 export function createMomentsSelection(projectId: string, context: MomentsContext): Promise<MomentsSelection> {
   return request(`/api/organizer/projects/${projectId}/moments-selection`, {
     method: 'POST',

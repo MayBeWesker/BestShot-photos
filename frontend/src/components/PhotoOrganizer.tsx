@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, Bot, Check, ChevronRight, Copy, Download, Images, LoaderCircle, LockKeyhole, Medal, Plus, RefreshCw, Sparkles, Trash2, UploadCloud, WandSparkles, X } from 'lucide-react'
+import { ArrowLeft, Bot, Check, ChevronRight, Copy, Download, Images, Layers3, LoaderCircle, LockKeyhole, Medal, Plus, RefreshCw, Sparkles, Trash2, UploadCloud, WandSparkles, X } from 'lucide-react'
 import { createMomentsRegeneration, createMomentsReplacement, createMomentsSelection, createOrganizerProject, deleteOrganizerProject, downloadMomentsArchive } from '../api'
 import type { GroupSensitivity, MomentsContext, MomentsSelection, MomentsTone, OrganizerProject, PhotoGroup } from '../types'
 
 interface Props {
   onError: (message: string) => void
   onActiveChange: (active: boolean) => void
+  onMerge: (projectId: string, mainPhotoId: string, sourcePhotoId: string) => Promise<void>
 }
 
 const modes: { value: GroupSensitivity; label: string; description: string }[] = [
@@ -14,7 +15,7 @@ const modes: { value: GroupSensitivity; label: string; description: string }[] =
   { value: 'loose', label: '宽松', description: '合并更多相近构图' },
 ]
 
-export function PhotoOrganizer({ onError, onActiveChange }: Props) {
+export function PhotoOrganizer({ onError, onActiveChange, onMerge }: Props) {
   const [files, setFiles] = useState<File[]>([])
   const [sensitivity, setSensitivity] = useState<GroupSensitivity>('standard')
   const [project, setProject] = useState<OrganizerProject | null>(null)
@@ -75,7 +76,7 @@ export function PhotoOrganizer({ onError, onActiveChange }: Props) {
 
   if (project) {
     const selected = project.groups.find((group) => group.id === selectedGroupId) ?? project.groups[0]
-    return <OrganizerResults project={project} selected={selected} onSelect={setSelectedGroupId} onReset={reset} onError={onError} />
+    return <OrganizerResults project={project} selected={selected} onSelect={setSelectedGroupId} onReset={reset} onError={onError} onMerge={onMerge} />
   }
 
   return (
@@ -154,7 +155,7 @@ export function PhotoOrganizer({ onError, onActiveChange }: Props) {
   )
 }
 
-function OrganizerResults({ project, selected, onSelect, onReset, onError }: { project: OrganizerProject; selected?: PhotoGroup; onSelect: (id: string) => void; onReset: () => void; onError: (message: string) => void }) {
+function OrganizerResults({ project, selected, onSelect, onReset, onError, onMerge }: { project: OrganizerProject; selected?: PhotoGroup; onSelect: (id: string) => void; onReset: () => void; onError: (message: string) => void; onMerge: Props['onMerge'] }) {
   const [moments, setMoments] = useState<MomentsSelection | null>(null)
   const [selectingMoments, setSelectingMoments] = useState(false)
   const [regeneratingMoments, setRegeneratingMoments] = useState(false)
@@ -162,9 +163,23 @@ function OrganizerResults({ project, selected, onSelect, onReset, onError }: { p
   const [smartReplacingRank, setSmartReplacingRank] = useState<number | null>(null)
   const [contextDialogOpen, setContextDialogOpen] = useState(false)
   const [regenerationDialogOpen, setRegenerationDialogOpen] = useState(false)
+  const [mergeMainId, setMergeMainId] = useState<string | null>(null)
+  const [merging, setMerging] = useState(false)
   const groupButtonRefs = useRef(new Map<string, HTMLButtonElement>())
   const byId = new Map(project.photos.map((photo) => [photo.id, photo]))
   const selectedPhotos = (selected?.photo_ids ?? []).map((id) => byId.get(id)).filter(Boolean) as OrganizerProject['photos']
+  const mergeGroup = project.groups.find((group) => mergeMainId && group.photo_ids.includes(mergeMainId))
+
+  const startGroupMerge = async (sourceId: string) => {
+    if (!mergeMainId || merging) return
+    try {
+      setMerging(true)
+      await onMerge(project.id, mergeMainId, sourceId)
+      setMergeMainId(null)
+    } catch (reason) {
+      onError(reason instanceof Error ? reason.message : '无法合成这些照片。')
+    } finally { setMerging(false) }
+  }
 
   useEffect(() => {
     if (!selected?.id) return
@@ -293,6 +308,7 @@ function OrganizerResults({ project, selected, onSelect, onReset, onError }: { p
                     {photo.quality.simplicity !== undefined && <Metric label="简洁" value={photo.quality.simplicity} />}
                   </div>
                   <footer title={photo.original_name}><Images size={12} />{photo.original_name}<span>{photo.width} × {photo.height}</span></footer>
+                  <button className="group-merge-action" type="button" disabled={selectedPhotos.length < 2} onClick={() => setMergeMainId(photo.id)} title={selectedPhotos.length < 2 ? '本组需要至少两张照片才能合成' : '以这张为主图，选择同组照片补充细节'}><Layers3 size={15} />照片合成</button>
                 </div>
               </article>
             ))}
@@ -301,6 +317,16 @@ function OrganizerResults({ project, selected, onSelect, onReset, onError }: { p
       </div>
       {contextDialogOpen && <MomentsContextDialog loading={selectingMoments} onClose={() => setContextDialogOpen(false)} onGenerate={selectForMoments} />}
       {moments && regenerationDialogOpen && <MomentsRegenerationDialog loading={regeneratingMoments} onClose={() => setRegenerationDialogOpen(false)} onGenerate={regenerateMoments} />}
+      {mergeMainId && mergeGroup && <div className="dialog-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !merging) setMergeMainId(null) }}>
+        <section className="group-replace-dialog" role="dialog" aria-modal="true" aria-labelledby="group-merge-title">
+          <header><div><h2 id="group-merge-title">选择一张照片补充细节</h2><p>以当前照片为主图，进入合成编辑器后涂抹需要替换的区域。</p></div><button type="button" disabled={merging} onClick={() => setMergeMainId(null)} aria-label="关闭"><X size={18} /></button></header>
+          <div className="group-merge-candidates">{mergeGroup.photo_ids.filter((id) => id !== mergeMainId).map((id) => {
+            const photo = byId.get(id)
+            return photo && <button type="button" key={id} disabled={merging} onClick={() => void startGroupMerge(id)}><img src={photo.thumbnail_url} alt={photo.original_name} /><span>{photo.quality.score} 分</span></button>
+          })}</div>
+          {merging && <p className="group-merge-status" role="status"><LoaderCircle className="spin" size={16} />正在对齐照片…</p>}
+        </section>
+      </div>}
     </main>
   )
 }
@@ -408,10 +434,11 @@ function MomentsResult({ selection, project, downloading, regenerating, smartRep
             const replacing = smartReplacingRank === item.rank
             const menuOpen = activeMenuRank === item.rank
             return (
-              <div className={`moments-tile ${menuOpen ? 'menu-open' : ''} ${activePreview?.rank === item.rank ? 'preview-active' : ''}`} role="button" tabIndex={0} key={item.rank} onClick={() => { setActivePreviewRank(item.rank); onSelectGroup(item.group_id); setActiveMenuRank(menuOpen ? null : item.rank) }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setActivePreviewRank(item.rank); onSelectGroup(item.group_id); setActiveMenuRank(menuOpen ? null : item.rank) } }} aria-expanded={menuOpen} aria-label={`调整第 ${item.rank} 格：${photo.original_name}`}>
+              <div className={`moments-tile ${menuOpen ? 'menu-open' : ''} ${activePreview?.rank === item.rank ? 'preview-active' : ''}`} key={item.rank} onClick={() => { setActivePreviewRank(item.rank); onSelectGroup(item.group_id); setActiveMenuRank(null) }} onKeyDown={(event) => { if (event.key === 'Escape') setActiveMenuRank(null) }}>
+                <button type="button" className="moments-tile-select" aria-label={`选择第 ${item.rank} 格：${photo.original_name}`} onClick={() => { setActivePreviewRank(item.rank); onSelectGroup(item.group_id); setActiveMenuRank(null) }} />
                 <img src={photo.thumbnail_url} alt={photo.original_name} />
                 <strong>{item.rank}</strong><span>{item.role}</span>
-                <i className="moments-tile-hint"><RefreshCw size={14} />点击调整</i>
+                <button type="button" className="moments-tile-hint" aria-label={`调整第 ${item.rank} 格`} aria-expanded={menuOpen} onClick={(event) => { event.stopPropagation(); setActivePreviewRank(item.rank); onSelectGroup(item.group_id); setActiveMenuRank(menuOpen ? null : item.rank) }}><RefreshCw size={14} />点击调整</button>
                 {menuOpen && <div className="moments-image-popover" onClick={(event) => event.stopPropagation()}>
                   <b>更换第 {item.rank} 格</b>
                   <button type="button" disabled={smartReplacingRank !== null || availableGroups.length === 0} onClick={() => { setActiveMenuRank(null); setManualReplaceRank(item.rank) }}><RefreshCw size={15} /><span><strong>手动换组</strong><small>选择新分组和具体照片</small></span></button>
@@ -459,6 +486,7 @@ function MomentsResult({ selection, project, downloading, regenerating, smartRep
 function Metric({ label, value }: { label: string; value: number }) {
   return <div><span>{label}</span><i><b style={{ width: `${Math.max(4, value)}%` }} /></i><strong>{Math.round(value)}</strong></div>
 }
+
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`

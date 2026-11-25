@@ -18,6 +18,7 @@ from ..services.photo_classifier import cluster_photos, extract_features, extrac
 from ..services.deepseek_selection import regenerate_moments_photos, replace_moments_photo, select_moments_photos
 from ..storage.organizer import organizer_store
 from ..storage.projects import store
+from ..schemas import OrganizerMergeRequest
 
 
 router = APIRouter(prefix="/api")
@@ -203,6 +204,19 @@ async def create_project(main_image: UploadFile = File(...), source_image: Uploa
     source, source_ext = decode_upload(await source_image.read())
     metadata = store.create(main, main_ext, source, source_ext)
     return serialize_project(metadata)
+
+
+@router.post("/organizer/projects/{project_id}/merge", response_model=ProjectResponse, status_code=201)
+def create_merge_from_group(project_id: str, request: OrganizerMergeRequest) -> dict:
+    metadata = organizer_store.load(project_id)
+    photo_ids = {request.main_photo_id, request.source_photo_id}
+    if len(photo_ids) != 2:
+        raise BestShotError("请选择两张不同的照片。", code="duplicate_photos")
+    if not any(photo_ids.issubset(set(group["photo_ids"])) for group in metadata["groups"]):
+        raise BestShotError("请选择同一分组中的两张照片。", code="invalid_merge_group")
+    main, main_ext = decode_upload(organizer_store.photo_path(project_id, request.main_photo_id).read_bytes())
+    source, source_ext = decode_upload(organizer_store.photo_path(project_id, request.source_photo_id).read_bytes())
+    return serialize_project(store.create(main, main_ext, source, source_ext))
 
 
 @router.get("/projects/{project_id}", response_model=ProjectResponse)

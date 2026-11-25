@@ -2,6 +2,10 @@ from pathlib import Path
 
 import cv2
 import numpy as np
+from fastapi.testclient import TestClient
+from app.main import app
+from app.api import routes
+from app.storage.organizer import OrganizerStore
 from app.services.global_align import align_global
 from app.services.mask import process_mask
 from app.services.pipeline import compose
@@ -94,4 +98,28 @@ def test_merge_store_uses_lossless_working_copy_for_heic(tmp_path: Path):
     assert metadata["main"]["filename"] == "main.png"
     assert metadata["source"]["filename"] == "source.png"
     assert local_store.image(metadata["id"], "main.png").shape == image.shape
+
+
+def test_group_merge_creates_independent_project_and_rejects_invalid_pairs(tmp_path, monkeypatch):
+    organizer = OrganizerStore(tmp_path / "organizer")
+    merges = ProjectStore(tmp_path / "merges")
+    monkeypatch.setattr(routes, "organizer_store", organizer)
+    monkeypatch.setattr(routes, "store", merges)
+    metadata = organizer.begin("standard")
+    image = feature_photo()
+    for index in range(3):
+        organizer.add_photo(metadata, data=encoded(image), image=image, extension=".png",
+                            original_name=f"test-{index}.png", taken_at=None, quality={"score": 90})
+    organizer.finalize(metadata, [[0, 1], [2]])
+    endpoint = f"/api/organizer/projects/{metadata['id']}/merge"
+    with TestClient(app) as client:
+        response = client.post(endpoint, json={"main_photo_id": "photo_001", "source_photo_id": "photo_002"})
+        assert response.status_code == 201
+        merged = response.json()
+        assert merged["main_image"]["width"] == image.shape[1]
+        assert merges.load(merged["id"])["current_version"] == 0
+        assert organizer.photo_path(metadata["id"], "photo_001").read_bytes() == encoded(image)
+        for source in ("photo_001", "photo_003", "photo_999"):
+            invalid = client.post(endpoint, json={"main_photo_id": "photo_001", "source_photo_id": source})
+            assert invalid.status_code == 400
 

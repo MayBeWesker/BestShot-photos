@@ -112,6 +112,11 @@ class MomentsDownloadRequest(BaseModel):
     photo_ids: list[str] = Field(min_length=1, max_length=9)
 
 
+class OrganizerMergeRequest(BaseModel):
+    main_photo_id: str = Field(max_length=80)
+    source_photo_id: str = Field(max_length=80)
+
+
 class MomentsReplacementRequest(BaseModel):
     photo_ids: list[str] = Field(min_length=1, max_length=9)
     replace_rank: int = Field(ge=1, le=9)

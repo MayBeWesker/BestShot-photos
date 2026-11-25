@@ -141,12 +141,28 @@ button { color: inherit; }
 .moments-group-preview header small { color: var(--accent); font-size: 9px; }
 .moments-group-preview header strong { overflow: hidden; color: #d5d7d9; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
 .moments-group-preview header > span { flex: 0 0 auto; color: #696d72; font-size: 10px; }
-.moments-group-thumbs { max-height: 330px; overflow-y: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; padding-right: 2px; }
+.moments-group-thumbs { max-height: 560px; overflow-y: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding-right: 2px; }
 .moments-group-thumbs button { aspect-ratio: 1; min-width: 0; position: relative; overflow: hidden; padding: 0; border: 2px solid transparent; border-radius: 8px; background: #0f1012; cursor: pointer; }
 .moments-group-thumbs button:hover:not(:disabled) { border-color: rgba(239,181,71,.62); }
 .moments-group-thumbs button.active { border-color: var(--accent); cursor: default; }
 .moments-group-thumbs img { width: 100%; height: 100%; display: block; object-fit: cover; }
 .moments-group-thumbs span { position: absolute; right: 4px; bottom: 4px; padding: 2px 5px; border-radius: 5px; background: rgba(8,9,10,.78); color: #fff; font-size: 9px; backdrop-filter: blur(5px); }
+.moments-tile-select { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; padding: 0; border: 0; border-radius: inherit; background: transparent; cursor: pointer; }
+.moments-tile > strong, .moments-tile > span { pointer-events: none; z-index: 2; }
+.moments-tile-hint { z-index: 3; border: 1px solid rgba(255,255,255,.15); cursor: pointer; pointer-events: none; }
+.moments-tile:hover .moments-tile-hint, .moments-tile:focus-within .moments-tile-hint, .moments-tile.menu-open .moments-tile-hint { pointer-events: auto; opacity: 1; transform: none; }
+.moments-tile:focus-within { border-color: var(--accent); }
+.group-merge-action { width: 100%; height: 40px; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 7px; border: 1px solid rgba(239,181,71,.3); border-radius: 8px; background: rgba(239,181,71,.06); color: var(--accent); font-size: 13px; cursor: pointer; }
+.group-merge-action:hover:not(:disabled) { background: rgba(239,181,71,.13); }
+.group-merge-action:disabled { opacity: .35; cursor: not-allowed; }
+.group-merge-candidates { min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.group-merge-candidates button { position: relative; padding: 0; overflow: hidden; border: 2px solid transparent; border-radius: 10px; background: #101113; cursor: pointer; }
+.group-merge-candidates button:hover:not(:disabled) { border-color: var(--accent); }
+.group-merge-candidates button:disabled { opacity: .5; cursor: wait; }
+.group-merge-candidates img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+.group-merge-candidates span { position: absolute; right: 8px; bottom: 8px; padding: 4px 7px; border-radius: 5px; background: rgba(0,0,0,.7); font-size: 12px; }
+.group-merge-status { display: flex; align-items: center; gap: 8px; color: var(--accent); font-size: 14px; }
+@media (hover: none) { .moments-tile .moments-tile-hint { opacity: 1; transform: none; pointer-events: auto; } }
 .moments-privacy { margin: 11px 0 0; display: flex; align-items: center; gap: 6px; color: #5f6367; font-size: 7px; }
 .dialog-backdrop { position: fixed; z-index: 40; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(5,6,7,.74); backdrop-filter: blur(8px); }
 .moments-dialog { width: min(620px, calc(100vw - 32px)); max-height: calc(100vh - 40px); overflow-y: auto; padding: 24px; border: 1px solid #34373b; border-radius: 18px; background: linear-gradient(145deg, #202226, #15171a); box-shadow: 0 35px 100px rgba(0,0,0,.58); }

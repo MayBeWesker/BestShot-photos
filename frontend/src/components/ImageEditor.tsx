@@ -126,7 +126,7 @@ export function ImageEditor({ project, onProject, onReset, onError }: Props) {
   return (
     <section className="editor-screen">
       <header className="editor-header">
-        <button className="brand-button" type="button" onClick={onReset} aria-label="返回上传页面">
+        <button className="brand-button" type="button" onClick={onReset} aria-label="返回照片" title="返回照片">
           <span className="brand-mark"><Sparkles size={17} /></span><span><strong>BestShot</strong><small>MERGE</small></span>
         </button>
         <div className="workflow-steps" aria-label="处理步骤">
