@@ -117,6 +117,27 @@ class OrganizerMergeRequest(BaseModel):
     source_photo_id: str = Field(max_length=80)
 
 
+class PoetryRequest(BaseModel):
+    photo_ids: list[str] = Field(min_length=1, max_length=9)
+    caption: str = Field(max_length=500)
+    emotion: str = Field(default="", max_length=300)
+
+
+class PoetryExcerpt(BaseModel):
+    id: str
+    author: str
+    era: str
+    title: str
+    verse: str
+    source_url: str
+    reason: str
+    matched_ranks: list[int]
+
+
+class PoetryResponse(BaseModel):
+    recommendations: list[PoetryExcerpt]
+
+
 class MomentsReplacementRequest(BaseModel):
     photo_ids: list[str] = Field(min_length=1, max_length=9)
     replace_rank: int = Field(ge=1, le=9)

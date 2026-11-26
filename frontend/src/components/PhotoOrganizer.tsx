@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowLeft, Bot, Check, ChevronRight, Copy, Download, Images, Layers3, LoaderCircle, LockKeyhole, Medal, Plus, RefreshCw, Sparkles, Trash2, UploadCloud, WandSparkles, X } from 'lucide-react'
 import { createMomentsRegeneration, createMomentsReplacement, createMomentsSelection, createOrganizerProject, deleteOrganizerProject, downloadMomentsArchive } from '../api'
 import type { GroupSensitivity, MomentsContext, MomentsSelection, MomentsTone, OrganizerProject, PhotoGroup } from '../types'
+import { PoetrySuggestions } from './PoetrySuggestions'
 
 interface Props {
   onError: (message: string) => void
@@ -454,6 +455,7 @@ function MomentsResult({ selection, project, downloading, regenerating, smartRep
             <div><span><RefreshCw size={17} /></span><strong>重新生成九图</strong></div>
             <button type="button" disabled={regenerating} onClick={onRegenerate}>{regenerating ? <LoaderCircle className="spin" size={15} /> : <WandSparkles size={15} />}{regenerating ? '正在生成…' : '重新生成'}</button>
           </section>
+          <PoetrySuggestions key={`${selection.created_at}:${selection.selected.map((item) => item.photo_id).join(',')}:${selection.caption_suggestion}`} projectId={project.id} photoIds={selection.selected.map((item) => item.photo_id)} caption={selection.caption_suggestion} disabled={regenerating || smartReplacingRank !== null} />
           {activePreview && activePreviewGroup && <section className="moments-control-card moments-group-preview">
             <header><div><small>第 {activePreview.rank} 格 · 当前分组</small><strong>{activePreviewGroup.name}</strong></div><span>{activePreviewPhotos.length} 张</span></header>
             <div className="moments-group-thumbs">
@@ -462,7 +464,7 @@ function MomentsResult({ selection, project, downloading, regenerating, smartRep
           </section>}
         </aside>
       </div>
-      <p className="moments-privacy"><LockKeyhole size={12} />仅在点击生成后分析高分分组的代表缩略图，原图不会上传。</p>
+      <p className="moments-privacy"><LockKeyhole size={12} />生成、调整或匹配诗句时仅分析缩略图，原图不会上传。</p>
       {manualReplaceRank !== null && <div className="dialog-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setManualReplaceRank(null) }}>
         <section className="group-replace-dialog" role="dialog" aria-modal="true" aria-labelledby="group-replace-title">
           <header><div><h2 id="group-replace-title">为第 {manualReplaceRank} 格选择新分组</h2><p>只显示当前九图尚未使用的分组，点击具体照片即可替换</p></div><button type="button" onClick={() => setManualReplaceRank(null)} aria-label="关闭"><X size={18} /></button></header>

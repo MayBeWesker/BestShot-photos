@@ -121,6 +121,21 @@ export interface MomentsReplacement {
   grid_review: string
 }
 
+export interface PoetryExcerpt {
+  id: string
+  author: string
+  era: string
+  title: string
+  verse: string
+  source_url: string
+  reason: string
+  matched_ranks: number[]
+}
+
+export interface PoetryResponse {
+  recommendations: PoetryExcerpt[]
+}
+
 export type MomentsTone = '自然随性' | '简洁克制' | '活泼有趣' | '温柔文艺'
 
 export interface MomentsContext {

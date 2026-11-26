@@ -19,6 +19,8 @@ from ..services.deepseek_selection import regenerate_moments_photos, replace_mom
 from ..storage.organizer import organizer_store
 from ..storage.projects import store
 from ..schemas import OrganizerMergeRequest
+from ..schemas import PoetryRequest, PoetryResponse
+from ..services.poetry_selection import recommend_poetry
 
 
 router = APIRouter(prefix="/api")
@@ -159,6 +161,8 @@ def create_moments_selection(project_id: str, request: MomentsSelectionRequest) 
     metadata = organizer_store.load(project_id)
     result = select_moments_photos(metadata, context=request.context.model_dump())
     metadata["moments_selection"] = result
+    metadata["moments_context"] = request.context.model_dump()
+    metadata["moments_instruction"] = ""
     organizer_store.save(metadata)
     return result
 
@@ -183,8 +187,14 @@ def regenerate_moments_selection(project_id: str, request: MomentsRegenerationRe
         instruction=request.instruction,
     )
     metadata["moments_selection"] = result
+    metadata["moments_instruction"] = request.instruction
     organizer_store.save(metadata)
     return result
+
+
+@router.post("/organizer/projects/{project_id}/poetry", response_model=PoetryResponse)
+def create_poetry_recommendations(project_id: str, request: PoetryRequest) -> dict:
+    return recommend_poetry(organizer_store.load(project_id), request.photo_ids, request.caption, request.emotion)
 
 
 @router.post("/organizer/projects/{project_id}/moments-replacement", response_model=MomentsReplacementResponse)

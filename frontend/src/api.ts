@@ -1,4 +1,4 @@
-import type { BlendMethod, ComposeResult, GroupSensitivity, MomentsContext, MomentsReplacement, MomentsSelection, OrganizerProject, PhotoProject } from './types'
+import type { BlendMethod, ComposeResult, GroupSensitivity, MomentsContext, MomentsReplacement, MomentsSelection, OrganizerProject, PhotoProject, PoetryResponse } from './types'
 
 export class ApiError extends Error {
   code: string
@@ -84,6 +84,14 @@ export function createGroupMerge(projectId: string, mainPhotoId: string, sourceP
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ main_photo_id: mainPhotoId, source_photo_id: sourcePhotoId }),
+  })
+}
+
+export function createPoetryRecommendations(projectId: string, photoIds: string[], caption: string, emotion: string): Promise<PoetryResponse> {
+  return request(`/api/organizer/projects/${projectId}/poetry`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ photo_ids: photoIds, caption, emotion }),
   })
 }
 

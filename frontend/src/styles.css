@@ -128,6 +128,28 @@ button { color: inherit; }
 .group-replace-dialog { width: min(980px, calc(100vw - 40px)); max-height: calc(100vh - 42px); overflow: hidden; display: grid; grid-template-rows: auto minmax(0,1fr); padding: 22px; border: 1px solid #373a3f; border-radius: 17px; background: linear-gradient(145deg,#202226,#15171a); box-shadow: 0 35px 100px rgba(0,0,0,.62); }.group-replace-dialog > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding-bottom: 18px; }.group-replace-dialog h2 { margin: 0; font-size: 22px; }.group-replace-dialog header p { margin: 6px 0 0; color: #85898d; font-size: 13px; }.group-replace-dialog > header > button { width: 38px; height: 38px; display: grid; place-items: center; border: 1px solid #373a3f; border-radius: 8px; background: #191b1e; color: #8c9094; cursor: pointer; }.replace-group-grid { min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 11px; padding-right: 5px; }.replace-group-grid > article { min-width: 0; padding: 11px; border: 1px solid #303338; border-radius: 10px; background: #15171a; }.replace-group-grid article > header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 9px; }.replace-group-grid article > header strong { color: #d2d4d6; font-size: 13px; }.replace-group-grid article > header span { color: #777b80; font-size: 11px; }.replace-group-grid article > div { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 3px; }.replace-group-grid article button { width: 78px; height: 66px; flex: 0 0 auto; position: relative; overflow: hidden; padding: 0; border: 2px solid transparent; border-radius: 7px; background: #0f1012; cursor: pointer; }.replace-group-grid article button:hover { border-color: var(--accent); }.replace-group-grid article button img { width: 100%; height: 100%; object-fit: cover; }.replace-group-grid article button span { position: absolute; left: 4px; bottom: 4px; padding: 2px 5px; border-radius: 4px; background: rgba(8,9,10,.78); color: #fff; font-size: 10px; }.no-replacement-groups { grid-column: 1/-1; padding: 40px; text-align: center; color: #85898d; font-size: 14px; }
 .moments-tile.preview-active { border-color: rgba(239,181,71,.9); box-shadow: 0 0 0 2px rgba(239,181,71,.12); }
 .moments-control-card { min-width: 0; padding: 14px; border: 1px solid #303338; border-radius: 11px; background: #15171a; }
+.poetry-card { display: grid; gap: 13px; }
+.poetry-card > header { display: flex; align-items: center; gap: 9px; color: var(--accent); }
+.poetry-card > header strong { color: #dcdddf; font-size: 15px; }
+.poetry-emotion { display: grid; gap: 7px; }
+.poetry-emotion > span { color: #95999e; font-size: 13px; }
+.poetry-emotion textarea { width: 100%; min-height: 74px; padding: 10px; resize: vertical; border: 1px solid #34373b; border-radius: 8px; outline: none; background: #111315; color: var(--ink); font-size: 14px; line-height: 1.6; }
+.poetry-emotion textarea:focus { border-color: var(--accent); }
+.poetry-emotion textarea::placeholder { color: #686d73; }
+.poetry-match { height: 40px; display: flex; align-items: center; justify-content: center; gap: 7px; border: 1px solid rgba(239,181,71,.4); border-radius: 8px; background: rgba(239,181,71,.07); color: var(--accent); font-size: 14px; cursor: pointer; }
+.poetry-match:disabled { opacity: .5; cursor: wait; }
+.poetry-result { min-width: 0; padding-top: 12px; border-top: 1px solid var(--line); }
+.poetry-options { display: flex; gap: 5px; margin-bottom: 14px; }
+.poetry-options button { flex: 1; height: 30px; border: 0; border-radius: 6px; background: #202327; color: #8e9399; font-size: 12px; cursor: pointer; }
+.poetry-options button[aria-pressed='true'] { background: rgba(239,181,71,.12); color: var(--accent); }
+.poetry-result blockquote { margin: 0 0 10px; color: #f1e2bd; font-family: 'Noto Serif SC', 'Songti SC', 'SimSun', serif; font-size: 21px; line-height: 1.8; letter-spacing: .04em; overflow-wrap: anywhere; }
+.poetry-source { display: block; color: #b89a61; text-decoration: none; font-size: 12px; line-height: 1.7; }
+.poetry-source:hover { color: var(--accent); text-decoration: underline; }
+.poetry-reason, .poetry-empty { margin: 10px 0; color: #95999e; font-size: 13px; line-height: 1.7; }
+.poetry-matches { color: #72777e; font-size: 12px; }
+.poetry-copy { display: flex; gap: 7px; margin-top: 13px; }
+.poetry-copy button { flex: 1; height: 34px; display: flex; align-items: center; justify-content: center; gap: 5px; border: 1px solid #34373b; border-radius: 7px; background: #1e2125; color: #bdc1c5; font-size: 12px; cursor: pointer; }
+.poetry-error { margin: 0; color: #e59c8d; font-size: 13px; line-height: 1.6; }
 .moments-regenerate-card { display: grid; gap: 12px; }
 .moments-regenerate-card > div { display: flex; align-items: center; gap: 9px; }
 .moments-regenerate-card > div > span { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 9px; background: rgba(239,181,71,.1); color: var(--accent); }

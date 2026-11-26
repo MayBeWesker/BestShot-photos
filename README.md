@@ -10,10 +10,11 @@ BestShot-photos is a privacy-first travel photo organizer that runs locally. It 
 - Group similar scenes and rank groups by their best photo
 - Score photos by sharpness, exposure, color, composition, and visual cleanliness
 - Build a coherent nine-photo story with an intentional layout
+- Match authentic classical verse to your selected photos, caption, and mood, with author credits and source links
 - Replace selections manually or with AI assistance, then download the final photos as a ZIP archive
 - Blend the best parts of burst photos and export the result as a high-resolution PNG
 
-> Photo organization runs locally by default. Only compressed thumbnails of candidate photos are sent to the user-configured vision API when the user explicitly generates a social media post. Original photos stay local, and the API key is read only by the local backend.
+> Photo organization runs locally by default. Compressed thumbnails are sent to the user-configured vision API only when generating or refining a post, or requesting verse recommendations. Original photos stay local, and the API key is read only by the local backend.
 
 ## Windows Quick Start
 
